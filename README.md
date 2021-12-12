@@ -1,2 +1,2 @@
 # Algorithms-Project
-Graph Visualizer Python Desktop Application
+Graph Visualizer Python Desktop Application.
