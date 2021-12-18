@@ -978,7 +978,7 @@ def destroy_initial():
     Grid.rowconfigure(app, index=4, weight=1)
     global filechoose_image
     filechoose_image = tkinter.PhotoImage(file='images/fileselect.png')
-    filechoose = tkinter.Label(app, text='Choose File', font=('bold', 12), bg='blue', fg='white')
+    filechoose = tkinter.Label(app, text='Choose File', font=('Ubuntu',12,'bold'), bg='blue', fg='black')
     filechoose.grid(row=0, column=0, sticky="se", padx=20)
 
     filechoose_button = tkinter.Button(app, image=filechoose_image, width=20, command=file_parser, borderwidth=0)
@@ -986,7 +986,7 @@ def destroy_initial():
     filechoose_button.bind("<Enter>", on_enter)
     filechoose_button.bind("<Leave>", on_leave)
 
-    algochoose_text = tkinter.Label(app, text='Choose Algorithm', font=('bold', 12), bg='blue', fg='white')
+    algochoose_text = tkinter.Label(app, text='Choose Algorithm', font=('Ubuntu',12,'bold'), bg='blue', fg='black')
     algochoose_text.grid(row=0, column=1, sticky='s')
     options = ["Original", "Prim's", "Kruskal's", "Dijkstra's", "Bellman Ford", "Floyd Warshall", "Boruvka's",
                "Local Clustering"]
@@ -995,27 +995,27 @@ def destroy_initial():
     algochoose.set(options[0])
     global drop
     drop = tkinter.OptionMenu(app, algochoose, *options, command=algoselected)
-    drop.config(bg='lightgreen')
+    drop.config(bg='lightblue',font=('Ubuntu',10,'bold'))
     drop.grid(row=1, column=1, sticky='n', pady=20)
     drop.config(state='disabled')
 
-    endprog = tkinter.Button(app, text='End Program', command=exiter, bg='white', fg='black')
+    endprog = tkinter.Button(app, text='End Program', command=exiter,font=('Ubuntu',10,'bold'), bg='white', fg='black')
     endprog.grid(row=0, column=2, sticky='sw')
     endprog.bind("<Enter>", on_enter_endprog)
     endprog.bind("<Leave>", on_leave_endprog)
 
     global draw_button
-    draw_button = tkinter.Button(app, text="Draw", width=12, command=draw, bg='white', fg='black')
+    draw_button = tkinter.Button(app, text="Draw", width=12, command=draw,font=('Ubuntu',10,'bold'), bg='white', fg='black')
     draw_button.grid(row=1, column=2, sticky='nw', pady=20)
     draw_button.bind("<Enter>", on_enter)
     draw_button.bind("<Leave>", on_leave)
     draw_button.config(state='disabled')
 
-    path_label = tkinter.Label(app, text='Path For Graph', font=('bold', 12), bg='blue', fg='white')
+    path_label = tkinter.Label(app, text='Path For Graph', font=('Ubuntu',12,'bold'), bg='blue', fg='black')
     path_label.grid(row=3, column=1, sticky='n')
 
     global text2#textbox to print path
-    text2 = tkinter.Text(app, height=6, width=70)
+    text2 = tkinter.Text(app, height=6, width=70,bg="#78818f")
     scroll = tkinter.Scrollbar(app, command=text2.yview)
     text2.configure(yscrollcommand=scroll.set)
     text2.tag_configure('bold_italics', font=('Arial', 12, 'bold', 'italic'))
@@ -1030,13 +1030,13 @@ def destroy_initial():
 
 app.title('Graph Visualizer')
 app.geometry('800x350')
-app.config(bg='#100f12')
+app.config(bg='#609da3')
 graph_img = tkinter.PhotoImage(file='images/graphs.png')
-begin_label = tkinter.Label(app,text='Graph Visualizer Application',font=('bold',47),bg='purple',fg='black')
+begin_label = tkinter.Label(app,text='Graph Visualizer Application',font=('Ubuntu',44,'bold'),bg='purple',fg='black')
 begin_label.grid(row=0,column=0,sticky='news')
 
 
-begin_button = tkinter.Button(app, text="Begin",font=('bold',30),width=20,command=destroy_initial,borderwidth=0,bg='grey')
+begin_button = tkinter.Button(app, text="Begin",font=('Ubuntu',30,'bold'),width=20,command=destroy_initial,borderwidth=0,bg='grey')
 begin_button.grid(row=1,column=0, sticky='news')
 begin_button.bind("<Enter>", on_enter)
 begin_button.bind("<Leave>", on_leave)
