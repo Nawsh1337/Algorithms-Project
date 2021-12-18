@@ -1,12 +1,8 @@
 import tkinter
 from tkinter import *
 from tkinter import Tk
-from tkinter.ttk import *
-import os
 import matplotlib.pyplot as plt
 import numpy
-import numpy as np
-import networkx as nx
 from tkinter import filedialog
 
 def on_enter(e):
@@ -24,6 +20,11 @@ def on_leave_endprog(e):
 def exiter():
     exit(0)
 def draw():
+    global path_text,text2
+    text2.configure(state='normal')
+    text2.delete('1.0', END)
+    text2.insert(tkinter.END,"No Output Detected Yet", 'color')
+    text2.configure(state='disabled')
     if algochoose.get()=="Original":
         plotter()
         plt.title("Original Graph")
@@ -33,40 +34,70 @@ def draw():
         new_edges = prims(num_nodes, edges)
         prims_plotter(new_edges)
         plt.title("Prim's Graph")
+        text2.configure(state='normal')
+        text2.delete('1.0', END)
+        text2.insert(tkinter.END, path_text, 'color')
+        text2.configure(state='disabled')
+        path_text = ""
         plt.show()
     elif algochoose.get()=="Kruskal's":
         print("Im kruskalkllll")
-        g = kruskal(num_nodes)
-        g.add_edge(edges)
+        g = kruskal(num_nodes, edges)
         new_edges=g.kruskals_algorithm()
-        kruskals_plotter(nodes,new_edges)
+        kruskals_plotter(new_edges)
         plt.title("Kruskal's Graph")
+        text2.configure(state='normal')
+        text2.delete('1.0', END)
+        text2.insert(tkinter.END, path_text, 'color')
+        text2.configure(state='disabled')
+        path_text = ""
         plt.show()
     elif algochoose.get() == "Dijkstra's":
         g = dijkstra()
         new_edges=g.dijkstras_algorithm(start_node,num_nodes,edges)
         dijkstras_plotter(new_edges)
         plt.title("Dijkstra's Graph")
+        text2.configure(state='normal')
+        text2.delete('1.0', END)
+        text2.insert(tkinter.END, path_text, 'color')
+        text2.configure(state='disabled')
+        path_text = ""
         plt.show()
     elif algochoose.get() == "Bellman Ford":
         new_edges = Bellman_ford(start_node, num_nodes, len(edges), edges)
         bellman_ford_plotter(new_edges)
         plt.title("Bellman Ford Graph")
+        text2.configure(state='normal')
+        text2.delete('1.0', END)
+        text2.insert(tkinter.END, path_text, 'color')
+        text2.configure(state='disabled')
+        path_text = ""
         plt.show()
     elif algochoose.get() == "Floyd Warshall":
         g = floyd_warshal(num_nodes, edges)
         new_edges=g.floyd_warshall_algorithm()
         floyd_warshal_plotter(new_edges)
         plt.title("Floyd Warshall Graph")
+        text2.configure(state='normal')
+        text2.delete('1.0', END)
+        text2.insert(tkinter.END, path_text, 'color')
+        text2.configure(state='disabled')
+        path_text = ""
         plt.show()
     elif algochoose.get() == "Boruvka's":
         g = boruvka(num_nodes, edges)
         new_edges=g.boruvka_mst()
         boruvka_plotter(new_edges)
         plt.title("Boruvka's Graph")
+        text2.configure(state='normal')
+        text2.delete('1.0', END)
+        text2.insert(tkinter.END, path_text, 'color')
+        text2.configure(state='disabled')
+        path_text = ""
         plt.show()
     file_parser_after_draw()
 def file_parser_after_draw():
+    global edges
     edges.clear()
     f_read = open(path, "rt")
     x = f_read.read()
@@ -92,6 +123,7 @@ def file_parser_after_draw():
     y.pop()
     a = []
     b = []
+    nodes.clear()
     for j in range(num_nodes):  # extracted nodes
         a = [float(i) for i in y[0]]
         nodes.append((int(a[0]), a[1], a[2]))
@@ -133,6 +165,7 @@ def file_parser():
     nodes = []
     global edges
     edges = []
+    edges.clear()
     global a
     global b
     a = []
@@ -206,45 +239,51 @@ def file_parser():
     # parser done till here
     # code to plot on math.lib
 def prims(V, G):
-    # create adj matrix from graph
+    global path_text
+    path_text = ""
     adjMatrix = []
-      #create N x N matrix filled with 0 edge weights between all vertices
+    adjMatrix.clear()
     for i in range(0, V):
         adjMatrix.append([])
         for j in range(0, V):
             adjMatrix[i].append(0)
-      #populate adjacency matrix with correct edge weights
+
     for i in range(0, len(G)):
         adjMatrix[G[i][0]][G[i][1]] = G[i][2]
         adjMatrix[G[i][1]][G[i][0]] = G[i][2]
-    #arbitrarily choose initial vertex from graph
+
     vertex = 0
-    #initialize empty edges array and empty MST
     MST = []
+    MST.clear()
     edges = []
+    edges.clear()
     visited = []
-    minEdge = [None,None,float('inf')]
-    #run prims algorithm until we create an MST
-    #that contains every vertex from the graph
-    while len(MST) != V-1:
-        #mark this vertex as visited
+    visited.clear()
+    minEdge = [None, None, float('inf')]
+
+    while len(MST) != V - 1:
         visited.append(vertex)
-        #add each edge to list of potential edges
         for r in range(0, V):
             if adjMatrix[vertex][r] != 0:
-                edges.append([vertex,r,adjMatrix[vertex][r]])
-          #find edge with the smallest weight to a vertex
-          #that has not yet been visited
+                edges.append([vertex, r, adjMatrix[vertex][r]])
+
         for e in range(0, len(edges)):
             if edges[e][2] < minEdge[2] and edges[e][1] not in visited:
                 minEdge = edges[e]
-          #remove min weight edge from list of edges
+
         edges.remove(minEdge)
-        #push min edge to MST
         MST.append(minEdge)
-        #start at new vertex and reset min edge
         vertex = minEdge[1]
-        minEdge = [None,None,float('inf')]
+        minEdge = [None, None, float('inf')]
+
+        # printing result of prims
+        MSTweight = 0
+    for i in range(len(MST)):
+        print("Edge %d-%d with weight %d included in MST" % (MST[i][0], MST[i][1], MST[i][2]))
+        path_text += "Edge " + str(MST[i][0]) + "-" + str(MST[i][1]) + " with weight " + str(MST[i][2]) + " included in MST\n"
+        MSTweight = MSTweight + MST[i][2]
+    print("Weight of MST is %d" % MSTweight)
+    path_text+="Weight of MST is " + str(MSTweight) +'\n'
     return MST
 def prims_plotter(edges):# for original
     bandwidth = []
@@ -260,7 +299,6 @@ def prims_plotter(edges):# for original
             a.append(edges[i][1])
             e.append(a[0:2])
             a.clear()
-
     for i in range(len(edges)):
         bandwidth.append(edges[i][2])
 
@@ -295,11 +333,9 @@ def prims_plotter(edges):# for original
 
     plt.title("Here we change it to dijkstras etc. according to given algo")
 class kruskal:
-    def __init__(self, vertex):
+    def __init__(self, vertex, e):
         self.V = vertex
         self.graph = []
-
-    def add_edge(self, e):
         self.graph = e
 
     def search(self, parent, i):
@@ -319,6 +355,8 @@ class kruskal:
             rank[xroot] += 1
 
     def kruskals_algorithm(self):
+        global path_text
+        path_text= ""
         result = []
         i, e = 0, 0
         self.graph = sorted(self.graph, key=lambda item: item[2])
@@ -336,11 +374,17 @@ class kruskal:
                 e = e + 1
                 result.append([u, v, w])
                 self.apply_union(parent, rank, x, y)
-        # for u, v, weight in result:
-        #    print("Edge:",u, v,end =" ")
-        #    print("-",weight)
+
+        # print of krsukal result
+        MSTweight = 0
+        for i in range(len(result)):
+            print("Edge %d-%d with weight %d included in MST" % (result[i][0], result[i][1], result[i][2]))
+            MSTweight = MSTweight + result[i][2]
+            path_text += "Edge " + str(result[i][0]) + "-" + str(result[i][1]) + " with weight " + str(result[i][2]) + " included in MST\n"
+        print("Weight of MST is %d" % MSTweight)
+        path_text += "Weight of MST is " + str(MSTweight)
         return result
-def kruskals_plotter(nodes,edges):# for original
+def kruskals_plotter(edges):# for original
     bandwidth = []
     point = []
     e = []
@@ -438,7 +482,8 @@ def plotter():# for original
     plt.title("Here we change it to dijkstras etc. according to given algo")
 class dijkstra:
     dij_edges = []
-
+    global path_text
+    path_text = ""
     def minDistance(self, dist, queue):
         # Initialize min value and min_index as -1
         minimum = float("Inf")
@@ -453,17 +498,27 @@ class dijkstra:
         return min_index
 
     def printPath(self, parent, j):
+        global path_text
         if parent[j] == -1:
-            print(j)
+            #print(j)
+            path_text += str(j)
+            path_text += '\n'
             return
         self.printPath(parent, parent[j])
         self.dij_edges.append(j)
-        print(j)
+        #print(j)
+        path_text += str(j)
+        path_text += '\n'
 
     def printSolution(self, dist, parent, src):
-        print("Vertex \t\tDistance from Source\tPath")
+        #print("Vertex \t\tDistance from Source\tPath")
+        global path_text
+        path_text = ""
+        path_text += "Vertex \t\tDistance from Source"
+        path_text += '\n'
         for i in range(0, len(dist)):
-            print("\n%d --> %d \t\t%d \t\t\t\t\t" % (src, i, dist[i])),
+            #print("\n%d --> %d \t\t%d \t\t\t\t\t" % (src, i, dist[i])),
+            path_text += '\n' + str(src) + '-->' + str(i) + '\t\t' + str(dist[i]) + '\n'
             self.dij_edges.append(src)
             self.printPath(parent, i)
 
@@ -519,9 +574,11 @@ class dijkstra:
             for j in range(len(G)):
                 if c[i] == G[j][0:2]:
                     c[i] = G[j]
+        self.dij_edges.clear()
         return c
 def dijkstras_plotter(edges):# for original
     bandwidth = []
+    bandwidth.clear()
     point = []
     e = []
     a = []
@@ -535,8 +592,10 @@ def dijkstras_plotter(edges):# for original
             e.append(a[0:2])
             a.clear()
 
+    print("EDGES ARE ", len(edges))
     for i in range(len(edges)):
         bandwidth.append(edges[i][2])
+        print(edges[i][2])
 
     # plot on mathplot.lib
     points = numpy.array(point)
@@ -569,6 +628,8 @@ def dijkstras_plotter(edges):# for original
 
     plt.title("Here we change it to dijkstras etc. according to given algo")
 def Bellman_ford(src, n, m, graph):
+    global path_text
+    path_text = ""
     dist = [float("inf") for i in range(n)]
     dist[src] = 0
     edges = []
@@ -582,13 +643,17 @@ def Bellman_ford(src, n, m, graph):
     for u, v, w in graph:
         if dist[u] != float("Inf") and dist[u] + w < dist[v]:
             print("Graph contains negative weight cycle")
+            path_text += "Graph contains negative weight cycle\n"
             cycle = 1
             break
     if cycle == 0:
         print('Distance from source vertex', src)
+        path_text += "Distance from source vertex,  " + str(src) + "\n"
         print('Vertex \t Distance from source')
+        path_text += 'Vertex \t Distance from source\n'
         for i in range(len(dist)):
             print(i, '\t', dist[i])
+            path_text += str(i) + '\t' + str(dist[i]) +"\n"
 
     return (edges)
 def bellman_ford_plotter(edges):
@@ -680,6 +745,8 @@ class floyd_warshal:
     # print results of floyd warshal
     def print_floyd_warshal(self):
         path = []
+        global path_text
+        path_text=""
         for i in range(self.V):
             for j in range(self.V):
                 if i != j:
@@ -688,10 +755,13 @@ class floyd_warshal:
                     path = []
 
     def printPath(self, path):
+        global path_text
         n = len(path)
         for i in range(n - 1):
             print(path[i], end=" -> ")
+            path_text += str(path[i]) + " -> "
         print(path[n - 1])
+        path_text += str(path[n-1]) + "\n"
 
     def floyd_warshall_algorithm(self):
         edges = []
@@ -794,9 +864,13 @@ class boruvka:
     # print boruvkas resut
 
     def print_boruvkas(self, edges):
+        global path_text
+        path_text = ""
         for i in range(len(edges)):
             print("Edge %d-%d with weight %d included in MST" % (edges[i][0], edges[i][1], edges[i][2]))
+            path_text += "Edge " + str(edges[i][0]) + "-" + str(edges[i][1]) + " with weight " + str(edges[i][2]) + " included in MST\n"
         print("Weight of MST is %d" % self.MSTweight)
+        path_text += "Weight of MST is " + str(self.MSTweight)
 
     def boruvka_mst(self):
         parent = []
@@ -891,50 +965,83 @@ def algoselected(event):
     print(algochoose.get())
 #create windows form
 app= Tk()
+def destroy_initial():
+    begin_button.destroy()
+    begin_label.destroy()
+    # dynamically resize
+    Grid.rowconfigure(app, index=0, weight=1)
+    Grid.columnconfigure(app, index=0, weight=1)
+    Grid.columnconfigure(app, index=1, weight=1)
+    Grid.columnconfigure(app, index=2, weight=1)
+    Grid.rowconfigure(app, index=2, weight=1)
+    Grid.rowconfigure(app, index=3, weight=1)
+    Grid.rowconfigure(app, index=4, weight=1)
+    global filechoose_image
+    filechoose_image = tkinter.PhotoImage(file='images/fileselect.png')
+    filechoose = tkinter.Label(app, text='Choose File', font=('bold', 12), bg='blue', fg='white')
+    filechoose.grid(row=0, column=0, sticky="se", padx=20)
+
+    filechoose_button = tkinter.Button(app, image=filechoose_image, width=20, command=file_parser, borderwidth=0)
+    filechoose_button.grid(row=1, column=0, sticky="e", padx=20, pady=20)
+    filechoose_button.bind("<Enter>", on_enter)
+    filechoose_button.bind("<Leave>", on_leave)
+
+    algochoose_text = tkinter.Label(app, text='Choose Algorithm', font=('bold', 12), bg='blue', fg='white')
+    algochoose_text.grid(row=0, column=1, sticky='s')
+    options = ["Original", "Prim's", "Kruskal's", "Dijkstra's", "Bellman Ford", "Floyd Warshall", "Boruvka's",
+               "Local Clustering"]
+    global algochoose
+    algochoose = StringVar()
+    algochoose.set(options[0])
+    global drop
+    drop = tkinter.OptionMenu(app, algochoose, *options, command=algoselected)
+    drop.config(bg='lightgreen')
+    drop.grid(row=1, column=1, sticky='n', pady=20)
+    drop.config(state='disabled')
+
+    endprog = tkinter.Button(app, text='End Program', command=exiter, bg='white', fg='black')
+    endprog.grid(row=0, column=2, sticky='sw')
+    endprog.bind("<Enter>", on_enter_endprog)
+    endprog.bind("<Leave>", on_leave_endprog)
+
+    global draw_button
+    draw_button = tkinter.Button(app, text="Draw", width=12, command=draw, bg='white', fg='black')
+    draw_button.grid(row=1, column=2, sticky='nw', pady=20)
+    draw_button.bind("<Enter>", on_enter)
+    draw_button.bind("<Leave>", on_leave)
+    draw_button.config(state='disabled')
+
+    path_label = tkinter.Label(app, text='Path For Graph', font=('bold', 12), bg='blue', fg='white')
+    path_label.grid(row=3, column=1, sticky='n')
+
+    global text2#textbox to print path
+    text2 = tkinter.Text(app, height=6, width=70)
+    scroll = tkinter.Scrollbar(app, command=text2.yview)
+    text2.configure(yscrollcommand=scroll.set)
+    text2.tag_configure('bold_italics', font=('Arial', 12, 'bold', 'italic'))
+    text2.tag_configure('big', font=('Verdana', 20, 'bold'))
+    text2.tag_configure('color', foreground='black', font=('Arial', 10, 'bold'))
+    global path_text
+    path_text = StringVar()  # display path
+    path_text="No Output Detected Yet"
+    text2.insert(tkinter.END, path_text, 'color')
+    text2.grid(row=3, column=1, sticky='s')
+    text2.configure(state='disabled')
 
 app.title('Graph Visualizer')
-app.geometry('450x350')
+app.geometry('800x350')
 app.config(bg='#100f12')
+graph_img = tkinter.PhotoImage(file='images/graphs.png')
+begin_label = tkinter.Label(app,text='Graph Visualizer Application',font=('bold',47),bg='purple',fg='black')
+begin_label.grid(row=0,column=0,sticky='news')
 
-#dynamically resize
+
+begin_button = tkinter.Button(app, text="Begin",font=('bold',30),width=20,command=destroy_initial,borderwidth=0,bg='grey')
+begin_button.grid(row=1,column=0, sticky='news')
+begin_button.bind("<Enter>", on_enter)
+begin_button.bind("<Leave>", on_leave)
 Grid.rowconfigure(app,index=0,weight=1)
+Grid.rowconfigure(app,index=1,weight=1)
 Grid.columnconfigure(app,index=0,weight=1)
-Grid.columnconfigure(app,index=1,weight=1)
-Grid.columnconfigure(app,index=2,weight=1)
-Grid.rowconfigure(app,index=2,weight=1)
-
-filechoose_image = tkinter.PhotoImage(file='images/fileselect.png')
-filechoose = tkinter.Label(app,text='Choose File',font=('bold',12),bg='blue',fg='white')
-filechoose.grid(row=0,column=0,sticky="se",padx=20)
-
-filechoose_button = tkinter.Button(app, image=filechoose_image,width=20,command=file_parser,borderwidth=0)
-filechoose_button.grid(row=1,column=0,sticky="e",padx=20,pady=20)
-filechoose_button.bind("<Enter>", on_enter)
-filechoose_button.bind("<Leave>", on_leave)
-
-
-algochoose_text = tkinter.Label(app, text='Choose Algorithm', font=('bold', 12),bg='blue',fg='white')
-algochoose_text.grid(row=0, column=1,sticky='s')
-options = ["Original","Prim's", "Kruskal's", "Dijkstra's", "Bellman Ford","Floyd Warshall", "Boruvka's", "Local Clustering"]
-
-algochoose = StringVar()
-algochoose.set(options[0])
-drop = tkinter.OptionMenu(app, algochoose, *options,command=algoselected)
-drop.config(bg='lightgreen')
-drop.grid(row=1, column=1,sticky='n',pady=20)
-drop.config(state='disabled')
-
-
-endprog = tkinter.Button(app, text = 'End Program', command = exiter,bg='white',fg='black')
-endprog.grid(row = 0, column = 2,sticky='sw')
-endprog.bind("<Enter>", on_enter_endprog)
-endprog.bind("<Leave>", on_leave_endprog)
-
-draw_button = tkinter.Button(app, text ="Draw",width=12,command=draw,bg='white',fg='black')
-draw_button.grid(row=1,column=2,sticky='nw',pady=20)
-draw_button.bind("<Enter>", on_enter)
-draw_button.bind("<Leave>", on_leave)
-draw_button.config(state='disabled')
-
 
 app= mainloop()
