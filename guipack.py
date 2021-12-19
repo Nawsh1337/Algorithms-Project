@@ -2,8 +2,13 @@ import tkinter
 from tkinter import *
 from tkinter import Tk
 import matplotlib.pyplot as plt
-import numpy
 from tkinter import filedialog
+import numpy
+import networkx as nx
+import numpy
+import sys
+from collections import defaultdict
+from matplotlib.cm import ScalarMappable
 
 def on_enter(e):
     e.widget['background'] = 'green'
@@ -30,7 +35,6 @@ def draw():
         plt.title("Original Graph")
         plt.show()
     elif algochoose.get()=="Prim's":
-        print("im primsssssss")
         new_edges = prims(num_nodes, edges)
         prims_plotter(new_edges)
         plt.title("Prim's Graph")
@@ -41,7 +45,6 @@ def draw():
         path_text = ""
         plt.show()
     elif algochoose.get()=="Kruskal's":
-        print("Im kruskalkllll")
         g = kruskal(num_nodes, edges)
         new_edges=g.kruskals_algorithm()
         kruskals_plotter(new_edges)
@@ -89,6 +92,15 @@ def draw():
         new_edges=g.boruvka_mst()
         boruvka_plotter(new_edges)
         plt.title("Boruvka's Graph")
+        text2.configure(state='normal')
+        text2.delete('1.0', END)
+        text2.insert(tkinter.END, path_text, 'color')
+        text2.configure(state='disabled')
+        path_text = ""
+        plt.show()
+    elif algochoose.get() == "Local Clustering":
+        local_clustering(num_nodes, nodes, edges)
+        plt.title("Local Clustering Graph")
         text2.configure(state='normal')
         text2.delete('1.0', END)
         text2.insert(tkinter.END, path_text, 'color')
@@ -275,14 +287,10 @@ def prims(V, G):
         MST.append(minEdge)
         vertex = minEdge[1]
         minEdge = [None, None, float('inf')]
-
-        # printing result of prims
         MSTweight = 0
     for i in range(len(MST)):
-        print("Edge %d-%d with weight %d included in MST" % (MST[i][0], MST[i][1], MST[i][2]))
         path_text += "Edge " + str(MST[i][0]) + "-" + str(MST[i][1]) + " with weight " + str(MST[i][2]) + " included in MST\n"
         MSTweight = MSTweight + MST[i][2]
-    print("Weight of MST is %d" % MSTweight)
     path_text+="Weight of MST is " + str(MSTweight) +'\n'
     return MST
 def prims_plotter(edges):# for original
@@ -290,6 +298,7 @@ def prims_plotter(edges):# for original
     point = []
     e = []
     a = []
+    annotation = []
     for i in range(len(nodes)):
         point.append(nodes[i][1:3])
 
@@ -299,6 +308,7 @@ def prims_plotter(edges):# for original
             a.append(edges[i][1])
             e.append(a[0:2])
             a.clear()
+
     for i in range(len(edges)):
         bandwidth.append(edges[i][2])
 
@@ -309,29 +319,41 @@ def prims_plotter(edges):# for original
     x = points[:, 0].flatten()
     y = points[:, 1].flatten()
 
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y',
-             markerfacecolor='red', marker='o')
+    #fig = plt.figure(figsize=(20, 20))
+    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
+
+    k = 0
+    for i, j in points:
+        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
+                     verticalalignment='center', )
+        k += 1
 
     for i in range(len(points)):
-        plt.annotate(i, (points[i]))
-    edges.sort()
-    start = 0
-    end = 0
-    i = 0
-    while i < len(edges) - 1:
-        start = edges[i][0]
-        end = edges[i][1]
-        plt.annotate(bandwidth[i], ((((points[int(edges[i][0])][0]) * 0.75 + (points[int(edges[i][1])][0]) * 0.25),
-                                     (((points[int(edges[i][0])][1]) * 0.75 + (
-                                         points[int(edges[i][1])][1]) * 0.25)))))
-        while (1):
-            if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                i += 1
-            else:
-                i += 1
-                break
+        edges.sort()
+        start = 0
+        end = 0
+        i = 0
+        while i < len(edges) - 1:
+            start = edges[i][0]
+            end = edges[i][1]
 
-    plt.title("Here we change it to dijkstras etc. according to given algo")
+            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
+                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
+            while (1):
+                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
+                    i += 1
+                else:
+                    i += 1
+                    break
+
+    a.sort()
+    for i in a:
+        if i not in annotation:
+            annotation.append(i)
+
+    for i in range(len(annotation)):
+        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
+                     verticalalignment='center', horizontalalignment='center')
 class kruskal:
     def __init__(self, vertex, e):
         self.V = vertex
@@ -378,10 +400,8 @@ class kruskal:
         # print of krsukal result
         MSTweight = 0
         for i in range(len(result)):
-            print("Edge %d-%d with weight %d included in MST" % (result[i][0], result[i][1], result[i][2]))
             MSTweight = MSTweight + result[i][2]
             path_text += "Edge " + str(result[i][0]) + "-" + str(result[i][1]) + " with weight " + str(result[i][2]) + " included in MST\n"
-        print("Weight of MST is %d" % MSTweight)
         path_text += "Weight of MST is " + str(MSTweight)
         return result
 def kruskals_plotter(edges):# for original
@@ -389,6 +409,7 @@ def kruskals_plotter(edges):# for original
     point = []
     e = []
     a = []
+    annotation = []
     for i in range(len(nodes)):
         point.append(nodes[i][1:3])
 
@@ -409,34 +430,47 @@ def kruskals_plotter(edges):# for original
     x = points[:, 0].flatten()
     y = points[:, 1].flatten()
 
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y',
-             markerfacecolor='red', marker='o')
+    #fig = plt.figure(figsize=(20, 20))
+    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
+
+    k = 0
+    for i, j in points:
+        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
+                     verticalalignment='center', )
+        k += 1
 
     for i in range(len(points)):
-        plt.annotate(i, (points[i]))
-    edges.sort()
-    start = 0
-    end = 0
-    i = 0
-    while i < len(edges) - 1:
-        start = edges[i][0]
-        end = edges[i][1]
-        plt.annotate(bandwidth[i], ((((points[int(edges[i][0])][0]) * 0.75 + (points[int(edges[i][1])][0]) * 0.25),
-                                     (((points[int(edges[i][0])][1]) * 0.75 + (
-                                         points[int(edges[i][1])][1]) * 0.25)))))
-        while (1):
-            if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                i += 1
-            else:
-                i += 1
-                break
+        edges.sort()
+        start = 0
+        end = 0
+        i = 0
+        while i < len(edges) - 1:
+            start = edges[i][0]
+            end = edges[i][1]
 
-    plt.title("Here we change it to dijkstras etc. according to given algo")
+            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
+                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
+            while (1):
+                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
+                    i += 1
+                else:
+                    i += 1
+                    break
+
+    a.sort()
+    for i in a:
+        if i not in annotation:
+            annotation.append(i)
+
+    for i in range(len(annotation)):
+        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
+                     verticalalignment='center', horizontalalignment='center')
 def plotter():# for original
     bandwidth = []
     point = []
     e = []
     a = []
+    annotation = []
     for i in range(len(nodes)):
         point.append(nodes[i][1:3])
 
@@ -457,29 +491,41 @@ def plotter():# for original
     x = points[:, 0].flatten()
     y = points[:, 1].flatten()
 
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y',
-             markerfacecolor='red', marker='o')
+    #fig = plt.figure(figsize=(20, 20))
+    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
+
+    k = 0
+    for i, j in points:
+        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
+                     verticalalignment='center', )
+        k += 1
 
     for i in range(len(points)):
-        plt.annotate(i, (points[i]))
-    edges.sort()
-    start = 0
-    end = 0
-    i = 0
-    while i < len(edges) - 1:
-        start = edges[i][0]
-        end = edges[i][1]
-        plt.annotate(bandwidth[i], ((((points[int(edges[i][0])][0]) * 0.75 + (points[int(edges[i][1])][0]) * 0.25),
-                                     (((points[int(edges[i][0])][1]) * 0.75 + (
-                                         points[int(edges[i][1])][1]) * 0.25)))))
-        while (1):
-            if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                i += 1
-            else:
-                i += 1
-                break
+        edges.sort()
+        start = 0
+        end = 0
+        i = 0
+        while i < len(edges) - 1:
+            start = edges[i][0]
+            end = edges[i][1]
 
-    plt.title("Here we change it to dijkstras etc. according to given algo")
+            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
+                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
+            while (1):
+                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
+                    i += 1
+                else:
+                    i += 1
+                    break
+
+    a.sort()
+    for i in a:
+        if i not in annotation:
+            annotation.append(i)
+
+    for i in range(len(annotation)):
+        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
+                     verticalalignment='center', horizontalalignment='center')
 class dijkstra:
     dij_edges = []
     global path_text
@@ -500,24 +546,20 @@ class dijkstra:
     def printPath(self, parent, j):
         global path_text
         if parent[j] == -1:
-            #print(j)
             path_text += str(j)
             path_text += '\n'
             return
         self.printPath(parent, parent[j])
         self.dij_edges.append(j)
-        #print(j)
         path_text += str(j)
         path_text += '\n'
 
     def printSolution(self, dist, parent, src):
-        #print("Vertex \t\tDistance from Source\tPath")
         global path_text
         path_text = ""
         path_text += "Vertex \t\tDistance from Source"
         path_text += '\n'
         for i in range(0, len(dist)):
-            #print("\n%d --> %d \t\t%d \t\t\t\t\t" % (src, i, dist[i])),
             path_text += '\n' + str(src) + '-->' + str(i) + '\t\t' + str(dist[i]) + '\n'
             self.dij_edges.append(src)
             self.printPath(parent, i)
@@ -578,10 +620,10 @@ class dijkstra:
         return c
 def dijkstras_plotter(edges):# for original
     bandwidth = []
-    bandwidth.clear()
     point = []
     e = []
     a = []
+    annotation = []
     for i in range(len(nodes)):
         point.append(nodes[i][1:3])
 
@@ -592,10 +634,8 @@ def dijkstras_plotter(edges):# for original
             e.append(a[0:2])
             a.clear()
 
-    print("EDGES ARE ", len(edges))
     for i in range(len(edges)):
         bandwidth.append(edges[i][2])
-        print(edges[i][2])
 
     # plot on mathplot.lib
     points = numpy.array(point)
@@ -604,29 +644,41 @@ def dijkstras_plotter(edges):# for original
     x = points[:, 0].flatten()
     y = points[:, 1].flatten()
 
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y',
-             markerfacecolor='red', marker='o')
+    #fig = plt.figure(figsize=(20, 20))
+    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
+
+    k = 0
+    for i, j in points:
+        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
+                     verticalalignment='center', )
+        k += 1
 
     for i in range(len(points)):
-        plt.annotate(i, (points[i]))
-    edges.sort()
-    start = 0
-    end = 0
-    i = 0
-    while i < len(edges) - 1:
-        start = edges[i][0]
-        end = edges[i][1]
-        plt.annotate(bandwidth[i], ((((points[int(edges[i][0])][0]) * 0.75 + (points[int(edges[i][1])][0]) * 0.25),
-                                     (((points[int(edges[i][0])][1]) * 0.75 + (
-                                         points[int(edges[i][1])][1]) * 0.25)))))
-        while (1):
-            if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                i += 1
-            else:
-                i += 1
-                break
+        edges.sort()
+        start = 0
+        end = 0
+        i = 0
+        while i < len(edges) - 1:
+            start = edges[i][0]
+            end = edges[i][1]
 
-    plt.title("Here we change it to dijkstras etc. according to given algo")
+            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
+                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
+            while (1):
+                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
+                    i += 1
+                else:
+                    i += 1
+                    break
+
+    a.sort()
+    for i in a:
+        if i not in annotation:
+            annotation.append(i)
+
+    for i in range(len(annotation)):
+        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
+                     verticalalignment='center', horizontalalignment='center')
 def Bellman_ford(src, n, m, graph):
     global path_text
     path_text = ""
@@ -642,17 +694,13 @@ def Bellman_ford(src, n, m, graph):
     cycle = 0
     for u, v, w in graph:
         if dist[u] != float("Inf") and dist[u] + w < dist[v]:
-            print("Graph contains negative weight cycle")
             path_text += "Graph contains negative weight cycle\n"
             cycle = 1
             break
     if cycle == 0:
-        print('Distance from source vertex', src)
         path_text += "Distance from source vertex,  " + str(src) + "\n"
-        print('Vertex \t Distance from source')
         path_text += 'Vertex \t Distance from source\n'
         for i in range(len(dist)):
-            print(i, '\t', dist[i])
             path_text += str(i) + '\t' + str(dist[i]) +"\n"
 
     return (edges)
@@ -661,6 +709,7 @@ def bellman_ford_plotter(edges):
     point = []
     e = []
     a = []
+    annotation = []
     for i in range(len(nodes)):
         point.append(nodes[i][1:3])
 
@@ -681,27 +730,41 @@ def bellman_ford_plotter(edges):
     x = points[:, 0].flatten()
     y = points[:, 1].flatten()
 
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y',
-             markerfacecolor='red', marker='o')
+    #fig = plt.figure(figsize=(20, 20))
+    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
+
+    k = 0
+    for i, j in points:
+        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
+                     verticalalignment='center', )
+        k += 1
 
     for i in range(len(points)):
-        plt.annotate(i, (points[i]))
-    edges.sort()
-    start = 0
-    end = 0
-    i = 0
-    while i < len(edges) - 1:
-        start = edges[i][0]
-        end = edges[i][1]
-        plt.annotate(bandwidth[i], ((((points[int(edges[i][0])][0]) * 0.75 + (points[int(edges[i][1])][0]) * 0.25),
-                                     (((points[int(edges[i][0])][1]) * 0.75 + (
-                                         points[int(edges[i][1])][1]) * 0.25)))))
-        while (1):
-            if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                i += 1
-            else:
-                i += 1
-                break
+        edges.sort()
+        start = 0
+        end = 0
+        i = 0
+        while i < len(edges) - 1:
+            start = edges[i][0]
+            end = edges[i][1]
+
+            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
+                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
+            while (1):
+                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
+                    i += 1
+                else:
+                    i += 1
+                    break
+
+    a.sort()
+    for i in a:
+        if i not in annotation:
+            annotation.append(i)
+
+    for i in range(len(annotation)):
+        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
+                     verticalalignment='center', horizontalalignment='center')
 class floyd_warshal:
 
     def __init__(self, vertex, G):
@@ -742,7 +805,6 @@ class floyd_warshal:
             path.append(u)
         return path
 
-    # print results of floyd warshal
     def print_floyd_warshal(self):
         path = []
         global path_text
@@ -758,9 +820,7 @@ class floyd_warshal:
         global path_text
         n = len(path)
         for i in range(n - 1):
-            print(path[i], end=" -> ")
             path_text += str(path[i]) + " -> "
-        print(path[n - 1])
         path_text += str(path[n-1]) + "\n"
 
     def floyd_warshall_algorithm(self):
@@ -794,6 +854,7 @@ def floyd_warshal_plotter(edges):
     point = []
     e = []
     a = []
+    annotation = []
     for i in range(len(nodes)):
         point.append(nodes[i][1:3])
 
@@ -814,29 +875,41 @@ def floyd_warshal_plotter(edges):
     x = points[:, 0].flatten()
     y = points[:, 1].flatten()
 
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y',
-             markerfacecolor='red', marker='o')
+    #fig = plt.figure(figsize=(20, 20))
+    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
+
+    k = 0
+    for i, j in points:
+        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
+                     verticalalignment='center', )
+        k += 1
 
     for i in range(len(points)):
-        plt.annotate(i, (points[i]))
-    edges.sort()
-    start = 0
-    end = 0
-    i = 0
-    while i < len(edges) - 1:
-        start = edges[i][0]
-        end = edges[i][1]
-        plt.annotate(bandwidth[i], ((((points[int(edges[i][0])][0]) * 0.75 + (points[int(edges[i][1])][0]) * 0.25),
-                                     (((points[int(edges[i][0])][1]) * 0.75 + (
-                                         points[int(edges[i][1])][1]) * 0.25)))))
-        while (1):
-            if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                i += 1
-            else:
-                i += 1
-                break
+        edges.sort()
+        start = 0
+        end = 0
+        i = 0
+        while i < len(edges) - 1:
+            start = edges[i][0]
+            end = edges[i][1]
 
-    plt.title("Here we change it to dijkstras etc. according to given algo")
+            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
+                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
+            while (1):
+                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
+                    i += 1
+                else:
+                    i += 1
+                    break
+
+    a.sort()
+    for i in a:
+        if i not in annotation:
+            annotation.append(i)
+
+    for i in range(len(annotation)):
+        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
+                     verticalalignment='center', horizontalalignment='center')
 class boruvka:
 
     def __init__(self, vertices, e):
@@ -867,9 +940,7 @@ class boruvka:
         global path_text
         path_text = ""
         for i in range(len(edges)):
-            print("Edge %d-%d with weight %d included in MST" % (edges[i][0], edges[i][1], edges[i][2]))
             path_text += "Edge " + str(edges[i][0]) + "-" + str(edges[i][1]) + " with weight " + str(edges[i][2]) + " included in MST\n"
-        print("Weight of MST is %d" % self.MSTweight)
         path_text += "Weight of MST is " + str(self.MSTweight)
 
     def boruvka_mst(self):
@@ -919,6 +990,7 @@ def boruvka_plotter(edges):
     point = []
     e = []
     a = []
+    annotation = []
     for i in range(len(nodes)):
         point.append(nodes[i][1:3])
 
@@ -939,30 +1011,72 @@ def boruvka_plotter(edges):
     x = points[:, 0].flatten()
     y = points[:, 1].flatten()
 
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y',
-             markerfacecolor='red', marker='o')
+    #fig = plt.figure(figsize=(20, 20))
+    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
+
+    k = 0
+    for i, j in points:
+        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
+                     verticalalignment='center', )
+        k += 1
 
     for i in range(len(points)):
-        plt.annotate(i, (points[i]))
-    edges.sort()
-    start = 0
-    end = 0
-    i = 0
-    while i < len(edges) - 1:
-        start = edges[i][0]
-        end = edges[i][1]
-        plt.annotate(bandwidth[i], ((((points[int(edges[i][0])][0]) * 0.75 + (points[int(edges[i][1])][0]) * 0.25),
-                                     (((points[int(edges[i][0])][1]) * 0.75 + (
-                                         points[int(edges[i][1])][1]) * 0.25)))))
-        while (1):
-            if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                i += 1
-            else:
-                i += 1
-                break
+        edges.sort()
+        start = 0
+        end = 0
+        i = 0
+        while i < len(edges) - 1:
+            start = edges[i][0]
+            end = edges[i][1]
+
+            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
+                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
+            while (1):
+                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
+                    i += 1
+                else:
+                    i += 1
+                    break
+
+    a.sort()
+    for i in a:
+        if i not in annotation:
+            annotation.append(i)
+
+    for i in range(len(annotation)):
+        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
+                     verticalalignment='center', horizontalalignment='center')
+def local_clustering(num_nodes, nodes, edges):
+    average = 0.0
+    global path_text
+    path_text = ""
+    sum = 0
+    g = nx.Graph()
+    for i, j, k in edges:
+        g.add_edge(i, j)
+    for i in range(num_nodes):
+        path_text += "clustering of "+ str(i) + " is: "
+        sum += nx.clustering(g, i)
+        path_text += str(nx.clustering(g, i)) + '\n'
+    average = sum / num_nodes
+    path_text += "average local clustering of graph is: " + str(average) +'\n'
+    gc = g.subgraph(max(nx.connected_components(g)))
+    lcc = nx.clustering(gc)
+
+    cmap = plt.get_cmap('autumn')
+    norm = plt.Normalize(0, max(lcc.values()))
+    node_colors = [cmap(norm(lcc[node])) for node in gc.nodes]
+
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(12, 4))
+    nx.draw_spring(gc, node_color=node_colors, with_labels=True, ax=ax1)
+    fig.colorbar(ScalarMappable(cmap=cmap, norm=norm), label='Clustering', shrink=0.95, ax=ax1)
+
+    ax2.hist(lcc.values(), bins=10)
+    ax2.set_xlabel('Clustering')
+    ax2.set_ylabel('Frequency')
+    plt.tight_layout()
 def algoselected(event):
     draw_button.config(state='normal')
-    print(algochoose.get())
 #create windows form
 app= Tk()
 def destroy_initial():
@@ -1031,7 +1145,6 @@ def destroy_initial():
 app.title('Graph Visualizer')
 app.geometry('800x350')
 app.config(bg='#609da3')
-graph_img = tkinter.PhotoImage(file='images/graphs.png')
 begin_label = tkinter.Label(app,text='Graph Visualizer Application',font=('Ubuntu',44,'bold'),bg='purple',fg='black')
 begin_label.grid(row=0,column=0,sticky='news')
 
