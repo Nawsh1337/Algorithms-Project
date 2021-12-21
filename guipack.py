@@ -165,19 +165,9 @@ def file_parser_after_draw():
         b.append((edges[i][0], edges[i][1], float(edges[i][2] / 10000000)))
     edges.clear()
     b.sort()
-
-    for i in range(len(b)):
-        for j in range(i, len(b)):
-            if (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] < b[j][2]):
-                edges.append(b[i])
-                break
-            elif (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] > b[j][2]):
-                edges.append(b[j])
-                break
-            elif (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] == b[j][2]):
-                edges.append(b[i])
-                edges.append(b[j])
-                break
+    for i in b:
+        edges.append(i)
+    b.clear()
 def file_parser():
     drop.config(state='normal')
     global nodes, edges, a, b, path, x, num_nodes, start_node
@@ -243,19 +233,9 @@ def file_parser():
         b.append((edges[i][0], edges[i][1], float(edges[i][2] / 10000000)))
     edges.clear()
     b.sort()
-
-    for i in range(len(b)):
-        for j in range(i, len(b)):
-            if (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] < b[j][2]):
-                edges.append(b[i])
-                break
-            elif (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] > b[j][2]):
-                edges.append(b[j])
-                break
-            elif (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] == b[j][2]):
-                edges.append(b[i])
-                edges.append(b[j])
-                break
+    for i in b:
+        edges.append(i)
+    b.clear()
     # parser done till here
     # code to plot on math.lib
 def prims(V, G):
@@ -390,7 +370,7 @@ def plotter():# for original
     pos = nx.get_node_attributes(graph, 'pos')
     weight = nx.get_edge_attributes(graph, 'weight')
     nx.draw(graph, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
-    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif",label_pos=0.75)
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
     plt.axis('on')
 class dijkstra:
@@ -496,7 +476,7 @@ def dijkstras_plotter(edges):# for original
     pos = nx.get_node_attributes(graph, 'pos')
     weight = nx.get_edge_attributes(graph, 'weight')
     nx.draw(graph, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
-    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif",label_pos=0.75)
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
     plt.axis('on')
 def Bellman_ford(src, n, m, graph):
@@ -535,7 +515,7 @@ def bellman_ford_plotter(edges):
     pos = nx.get_node_attributes(graph, 'pos')
     weight = nx.get_edge_attributes(graph, 'weight')
     nx.draw(graph, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
-    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif",label_pos=0.75)
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
     plt.axis('on')
 class floyd_warshal:
@@ -633,7 +613,7 @@ def floyd_warshal_plotter(edges):
     pos = nx.get_node_attributes(graph, 'pos')
     weight = nx.get_edge_attributes(graph, 'weight')
     nx.draw(graph, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
-    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif",label_pos=0.75)
     ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
     plt.axis('on')
 class boruvka:
@@ -837,3 +817,15 @@ Grid.rowconfigure(app,index=1,weight=1)
 Grid.columnconfigure(app,index=0,weight=1)
 
 app= mainloop()
+#for i in range(len(b)):
+    #for j in range(i, len(b)):
+        #if (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] < b[j][2]):
+            #edges.append(b[i])
+            #break
+            #elif (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] > b[j][2]):
+            #edges.append(b[j])
+            #break
+            #elif (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] == b[j][2]):
+            #edges.append(b[i])
+            #edges.append(b[j])
+            #break
