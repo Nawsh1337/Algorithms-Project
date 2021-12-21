@@ -109,8 +109,9 @@ def draw():
         plt.show()
     file_parser_after_draw()
 def file_parser_after_draw():
-    global edges
+    global edges,num_nodes,start_node
     edges.clear()
+
     f_read = open(path, "rt")
     x = f_read.read()
     f_read.close()
@@ -127,15 +128,12 @@ def file_parser_after_draw():
     y = x.splitlines()
 
     y = [i.split("\t") for i in y]  # split string inside each list
-    global num_nodes
     num_nodes = int(y[0][0])
-    global start_node
     start_node = int(y[-1][0])
     y.pop(0)
     y.pop()
     a = []
     b = []
-    nodes.clear()
     for j in range(num_nodes):  # extracted nodes
         a = [float(i) for i in y[0]]
         nodes.append((int(a[0]), a[1], a[2]))
@@ -164,32 +162,35 @@ def file_parser_after_draw():
     for i in range(len(edges)):  # convert in integer and remove nonimportant bandwidth
         if edges[i][0] == edges[i][1]:
             continue
-        b.append((edges[i][0], edges[i][1], int(edges[i][2] / 1000000)))
-
+        b.append((edges[i][0], edges[i][1], float(edges[i][2] / 10000000)))
     edges.clear()
-    for i in b:
-        edges.append(i)
-    b.clear()
-    edges.sort()
+    b.sort()
+
+    for i in range(len(b)):
+        for j in range(i, len(b)):
+            if (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] < b[j][2]):
+                edges.append(b[i])
+                break
+            elif (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] > b[j][2]):
+                edges.append(b[j])
+                break
+            elif (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] == b[j][2]):
+                edges.append(b[i])
+                edges.append(b[j])
+                break
 def file_parser():
     drop.config(state='normal')
-    global nodes
+    global nodes, edges, a, b, path, x, num_nodes, start_node
     nodes = []
-    global edges
     edges = []
-    edges.clear()
-    global a
-    global b
     a = []
     b = []
     test = tkinter.Tk()
     test.withdraw()
-    global path
-    path = filedialog.askopenfilename(initialdir="C:/Users/MainFrame/Desktop/",title="Open Text file",filetypes=(("Text Files Only", "*.txt"),))
+
+    path = filedialog.askopenfilename()
 
     f_read = open(path, "rt")
-
-    global x
     x = f_read.read()
     f_read.close()
 
@@ -205,9 +206,7 @@ def file_parser():
     y = x.splitlines()
 
     y = [i.split("\t") for i in y]  # split string inside each list
-    global num_nodes
     num_nodes = int(y[0][0])
-    global start_node
     start_node = int(y[-1][0])
     y.pop(0)
     y.pop()
@@ -241,13 +240,22 @@ def file_parser():
     for i in range(len(edges)):  # convert in integer and remove nonimportant bandwidth
         if edges[i][0] == edges[i][1]:
             continue
-        b.append((edges[i][0], edges[i][1], int(edges[i][2] / 1000000)))
-
+        b.append((edges[i][0], edges[i][1], float(edges[i][2] / 10000000)))
     edges.clear()
-    for i in b:
-        edges.append(i)
-    b.clear()
-    edges.sort()
+    b.sort()
+
+    for i in range(len(b)):
+        for j in range(i, len(b)):
+            if (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] < b[j][2]):
+                edges.append(b[i])
+                break
+            elif (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] > b[j][2]):
+                edges.append(b[j])
+                break
+            elif (b[i][0] == b[j][1] and b[i][1] == b[j][0] and b[i][2] == b[j][2]):
+                edges.append(b[i])
+                edges.append(b[j])
+                break
     # parser done till here
     # code to plot on math.lib
 def prims(V, G):
@@ -294,66 +302,19 @@ def prims(V, G):
     path_text+="Weight of MST is " + str(MSTweight) +'\n'
     return MST
 def prims_plotter(edges):# for original
-    bandwidth = []
-    point = []
-    e = []
-    a = []
-    annotation = []
-    for i in range(len(nodes)):
-        point.append(nodes[i][1:3])
-
+    g = nx.Graph()
+    for i in range(num_nodes):
+        g.add_node(i, pos=nodes[i][1:3])
     for i in range(len(edges)):
-        if edges[i][0] != edges[i][1]:
-            a.append(edges[i][0])
-            a.append(edges[i][1])
-            e.append(a[0:2])
-            a.clear()
+        g.add_edge(edges[i][0], edges[i][1], weight=edges[i][2])
 
-    for i in range(len(edges)):
-        bandwidth.append(edges[i][2])
-
-    # plot on mathplot.lib
-    points = numpy.array(point)
-    edge = numpy.array(e)
-
-    x = points[:, 0].flatten()
-    y = points[:, 1].flatten()
-
-    #fig = plt.figure(figsize=(20, 20))
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
-
-    k = 0
-    for i, j in points:
-        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
-                     verticalalignment='center', )
-        k += 1
-
-    for i in range(len(points)):
-        edges.sort()
-        start = 0
-        end = 0
-        i = 0
-        while i < len(edges) - 1:
-            start = edges[i][0]
-            end = edges[i][1]
-
-            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
-                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
-            while (1):
-                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                    i += 1
-                else:
-                    i += 1
-                    break
-
-    a.sort()
-    for i in a:
-        if i not in annotation:
-            annotation.append(i)
-
-    for i in range(len(annotation)):
-        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
-                     verticalalignment='center', horizontalalignment='center')
+    fig, ax = plt.subplots()
+    pos = nx.get_node_attributes(g, 'pos')
+    weight = nx.get_edge_attributes(g, 'weight')
+    nx.draw(g, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
+    nx.draw_networkx_edge_labels(g, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+    plt.axis('on')
 class kruskal:
     def __init__(self, vertex, e):
         self.V = vertex
@@ -405,127 +366,33 @@ class kruskal:
         path_text += "Weight of MST is " + str(MSTweight)
         return result
 def kruskals_plotter(edges):# for original
-    bandwidth = []
-    point = []
-    e = []
-    a = []
-    annotation = []
-    for i in range(len(nodes)):
-        point.append(nodes[i][1:3])
-
+    g = nx.Graph()
+    for i in range(num_nodes):
+        g.add_node(i, pos=nodes[i][1:3])
     for i in range(len(edges)):
-        if edges[i][0] != edges[i][1]:
-            a.append(edges[i][0])
-            a.append(edges[i][1])
-            e.append(a[0:2])
-            a.clear()
+        g.add_edge(edges[i][0], edges[i][1], weight=edges[i][2])
 
-    for i in range(len(edges)):
-        bandwidth.append(edges[i][2])
-
-    # plot on mathplot.lib
-    points = numpy.array(point)
-    edge = numpy.array(e)
-
-    x = points[:, 0].flatten()
-    y = points[:, 1].flatten()
-
-    #fig = plt.figure(figsize=(20, 20))
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
-
-    k = 0
-    for i, j in points:
-        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
-                     verticalalignment='center', )
-        k += 1
-
-    for i in range(len(points)):
-        edges.sort()
-        start = 0
-        end = 0
-        i = 0
-        while i < len(edges) - 1:
-            start = edges[i][0]
-            end = edges[i][1]
-
-            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
-                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
-            while (1):
-                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                    i += 1
-                else:
-                    i += 1
-                    break
-
-    a.sort()
-    for i in a:
-        if i not in annotation:
-            annotation.append(i)
-
-    for i in range(len(annotation)):
-        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
-                     verticalalignment='center', horizontalalignment='center')
+    fig, ax = plt.subplots()
+    pos = nx.get_node_attributes(g, 'pos')
+    weight = nx.get_edge_attributes(g, 'weight')
+    nx.draw(g, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
+    nx.draw_networkx_edge_labels(g, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+    plt.axis('on')
 def plotter():# for original
-    bandwidth = []
-    point = []
-    e = []
-    a = []
-    annotation = []
-    for i in range(len(nodes)):
-        point.append(nodes[i][1:3])
-
+    graph = nx.DiGraph()
+    for i in range(num_nodes):
+        graph.add_node(i, pos=nodes[i][1:3])
     for i in range(len(edges)):
-        if edges[i][0] != edges[i][1]:
-            a.append(edges[i][0])
-            a.append(edges[i][1])
-            e.append(a[0:2])
-            a.clear()
+        graph.add_edge(edges[i][0], edges[i][1], weight=edges[i][2])
 
-    for i in range(len(edges)):
-        bandwidth.append(edges[i][2])
-
-    # plot on mathplot.lib
-    points = numpy.array(point)
-    edge = numpy.array(e)
-
-    x = points[:, 0].flatten()
-    y = points[:, 1].flatten()
-
-    #fig = plt.figure(figsize=(20, 20))
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
-
-    k = 0
-    for i, j in points:
-        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
-                     verticalalignment='center', )
-        k += 1
-
-    for i in range(len(points)):
-        edges.sort()
-        start = 0
-        end = 0
-        i = 0
-        while i < len(edges) - 1:
-            start = edges[i][0]
-            end = edges[i][1]
-
-            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
-                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
-            while (1):
-                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                    i += 1
-                else:
-                    i += 1
-                    break
-
-    a.sort()
-    for i in a:
-        if i not in annotation:
-            annotation.append(i)
-
-    for i in range(len(annotation)):
-        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
-                     verticalalignment='center', horizontalalignment='center')
+    fig, ax = plt.subplots()
+    pos = nx.get_node_attributes(graph, 'pos')
+    weight = nx.get_edge_attributes(graph, 'weight')
+    nx.draw(graph, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+    plt.axis('on')
 class dijkstra:
     dij_edges = []
     global path_text
@@ -619,66 +486,19 @@ class dijkstra:
         self.dij_edges.clear()
         return c
 def dijkstras_plotter(edges):# for original
-    bandwidth = []
-    point = []
-    e = []
-    a = []
-    annotation = []
-    for i in range(len(nodes)):
-        point.append(nodes[i][1:3])
-
+    graph = nx.DiGraph()
+    for i in range(num_nodes):
+        graph.add_node(i, pos=nodes[i][1:3])
     for i in range(len(edges)):
-        if edges[i][0] != edges[i][1]:
-            a.append(edges[i][0])
-            a.append(edges[i][1])
-            e.append(a[0:2])
-            a.clear()
+        graph.add_edge(edges[i][0], edges[i][1], weight=edges[i][2])
 
-    for i in range(len(edges)):
-        bandwidth.append(edges[i][2])
-
-    # plot on mathplot.lib
-    points = numpy.array(point)
-    edge = numpy.array(e)
-
-    x = points[:, 0].flatten()
-    y = points[:, 1].flatten()
-
-    #fig = plt.figure(figsize=(20, 20))
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
-
-    k = 0
-    for i, j in points:
-        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
-                     verticalalignment='center', )
-        k += 1
-
-    for i in range(len(points)):
-        edges.sort()
-        start = 0
-        end = 0
-        i = 0
-        while i < len(edges) - 1:
-            start = edges[i][0]
-            end = edges[i][1]
-
-            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
-                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
-            while (1):
-                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                    i += 1
-                else:
-                    i += 1
-                    break
-
-    a.sort()
-    for i in a:
-        if i not in annotation:
-            annotation.append(i)
-
-    for i in range(len(annotation)):
-        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
-                     verticalalignment='center', horizontalalignment='center')
+    fig, ax = plt.subplots()
+    pos = nx.get_node_attributes(graph, 'pos')
+    weight = nx.get_edge_attributes(graph, 'weight')
+    nx.draw(graph, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+    plt.axis('on')
 def Bellman_ford(src, n, m, graph):
     global path_text
     path_text = ""
@@ -705,66 +525,19 @@ def Bellman_ford(src, n, m, graph):
 
     return (edges)
 def bellman_ford_plotter(edges):
-    bandwidth = []
-    point = []
-    e = []
-    a = []
-    annotation = []
-    for i in range(len(nodes)):
-        point.append(nodes[i][1:3])
-
+    graph = nx.DiGraph()
+    for i in range(num_nodes):
+        graph.add_node(i, pos=nodes[i][1:3])
     for i in range(len(edges)):
-        if edges[i][0] != edges[i][1]:
-            a.append(edges[i][0])
-            a.append(edges[i][1])
-            e.append(a[0:2])
-            a.clear()
+        graph.add_edge(edges[i][0], edges[i][1], weight=edges[i][2])
 
-    for i in range(len(edges)):
-        bandwidth.append(edges[i][2])
-
-    # plot on mathplot.lib
-    points = numpy.array(point)
-    edge = numpy.array(e)
-
-    x = points[:, 0].flatten()
-    y = points[:, 1].flatten()
-
-    #fig = plt.figure(figsize=(20, 20))
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
-
-    k = 0
-    for i, j in points:
-        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
-                     verticalalignment='center', )
-        k += 1
-
-    for i in range(len(points)):
-        edges.sort()
-        start = 0
-        end = 0
-        i = 0
-        while i < len(edges) - 1:
-            start = edges[i][0]
-            end = edges[i][1]
-
-            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
-                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
-            while (1):
-                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                    i += 1
-                else:
-                    i += 1
-                    break
-
-    a.sort()
-    for i in a:
-        if i not in annotation:
-            annotation.append(i)
-
-    for i in range(len(annotation)):
-        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
-                     verticalalignment='center', horizontalalignment='center')
+    fig, ax = plt.subplots()
+    pos = nx.get_node_attributes(graph, 'pos')
+    weight = nx.get_edge_attributes(graph, 'weight')
+    nx.draw(graph, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+    plt.axis('on')
 class floyd_warshal:
 
     def __init__(self, vertex, G):
@@ -850,66 +623,19 @@ class floyd_warshal:
         self.print_floyd_warshal()
         return path
 def floyd_warshal_plotter(edges):
-    bandwidth = []
-    point = []
-    e = []
-    a = []
-    annotation = []
-    for i in range(len(nodes)):
-        point.append(nodes[i][1:3])
-
+    graph = nx.DiGraph()
+    for i in range(num_nodes):
+        graph.add_node(i, pos=nodes[i][1:3])
     for i in range(len(edges)):
-        if edges[i][0] != edges[i][1]:
-            a.append(edges[i][0])
-            a.append(edges[i][1])
-            e.append(a[0:2])
-            a.clear()
+        graph.add_edge(edges[i][0], edges[i][1], weight=edges[i][2])
 
-    for i in range(len(edges)):
-        bandwidth.append(edges[i][2])
-
-    # plot on mathplot.lib
-    points = numpy.array(point)
-    edge = numpy.array(e)
-
-    x = points[:, 0].flatten()
-    y = points[:, 1].flatten()
-
-    #fig = plt.figure(figsize=(20, 20))
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
-
-    k = 0
-    for i, j in points:
-        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
-                     verticalalignment='center', )
-        k += 1
-
-    for i in range(len(points)):
-        edges.sort()
-        start = 0
-        end = 0
-        i = 0
-        while i < len(edges) - 1:
-            start = edges[i][0]
-            end = edges[i][1]
-
-            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
-                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
-            while (1):
-                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                    i += 1
-                else:
-                    i += 1
-                    break
-
-    a.sort()
-    for i in a:
-        if i not in annotation:
-            annotation.append(i)
-
-    for i in range(len(annotation)):
-        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
-                     verticalalignment='center', horizontalalignment='center')
+    fig, ax = plt.subplots()
+    pos = nx.get_node_attributes(graph, 'pos')
+    weight = nx.get_edge_attributes(graph, 'weight')
+    nx.draw(graph, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+    plt.axis('on')
 class boruvka:
 
     def __init__(self, vertices, e):
@@ -986,66 +712,19 @@ class boruvka:
         self.print_boruvkas(edges)
         return edges
 def boruvka_plotter(edges):
-    bandwidth = []
-    point = []
-    e = []
-    a = []
-    annotation = []
-    for i in range(len(nodes)):
-        point.append(nodes[i][1:3])
-
+    g = nx.Graph()
+    for i in range(num_nodes):
+        g.add_node(i, pos=nodes[i][1:3])
     for i in range(len(edges)):
-        if edges[i][0] != edges[i][1]:
-            a.append(edges[i][0])
-            a.append(edges[i][1])
-            e.append(a[0:2])
-            a.clear()
+        g.add_edge(edges[i][0], edges[i][1], weight=edges[i][2])
 
-    for i in range(len(edges)):
-        bandwidth.append(edges[i][2])
-
-    # plot on mathplot.lib
-    points = numpy.array(point)
-    edge = numpy.array(e)
-
-    x = points[:, 0].flatten()
-    y = points[:, 1].flatten()
-
-    #fig = plt.figure(figsize=(20, 20))
-    plt.plot(x[edge.T], y[edge.T], linestyle='-', color='y', markersize=20, markerfacecolor='red', marker='o')
-
-    k = 0
-    for i, j in points:
-        plt.annotate(k, xy=(i, j), color='black', fontsize="large", weight='light', horizontalalignment='center',
-                     verticalalignment='center', )
-        k += 1
-
-    for i in range(len(points)):
-        edges.sort()
-        start = 0
-        end = 0
-        i = 0
-        while i < len(edges) - 1:
-            start = edges[i][0]
-            end = edges[i][1]
-
-            a.append((bandwidth[i], ((points[int(edges[i][0])][0]) + (points[int(edges[i][1])][0])) / 2,
-                      (((points[int(edges[i][0])][1]) + (points[int(edges[i][1])][1]))) / 2))
-            while (1):
-                if (start == edges[i + 1][0] and end == edges[i + 1][1]):
-                    i += 1
-                else:
-                    i += 1
-                    break
-
-    a.sort()
-    for i in a:
-        if i not in annotation:
-            annotation.append(i)
-
-    for i in range(len(annotation)):
-        plt.annotate(annotation[i][0], xy=(annotation[i][1], annotation[i][2]), xycoords='data',
-                     verticalalignment='center', horizontalalignment='center')
+    fig, ax = plt.subplots()
+    pos = nx.get_node_attributes(g, 'pos')
+    weight = nx.get_edge_attributes(g, 'weight')
+    nx.draw(g, pos, with_labels=1, node_size=200, width=1, edge_color="y", node_color="red", ax=ax)
+    nx.draw_networkx_edge_labels(g, pos, edge_labels=weight, font_size=6, font_family="sans-serif")
+    ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+    plt.axis('on')
 def local_clustering(num_nodes, nodes, edges):
     average = 0.0
     global path_text
